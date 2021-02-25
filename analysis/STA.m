@@ -149,7 +149,7 @@ if vis == 1
     ylabel('slope of STA')
 
     text(0, max(slope)/3*2, ['\leftarrow sum slope = ', num2str(sum(windSlope)), '\newline     cell Type = ', num2str(Type)])
-%    pause 
+%    pause
 %    close (h)
 end
 end
