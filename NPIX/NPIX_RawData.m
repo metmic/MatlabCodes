@@ -64,12 +64,16 @@ end
 tSp = tSp(info.sorted>=1 & info.sorted<=3);
 Ch = info.channel(info.sorted>=1 & info.sorted<=3);                         % main channel # for each neuron for STA section
 
-% re-order ascending channel: deep to superficial / caudal to rostral
+% re-order ascending channels: deep to superficial / caudal to rostral
 % depending on NPIX placement
 [Ch, idxCh] = sort(Ch);
 tSp = tSp(idxCh);
-info.id = id(idxCh);
+info.id = info.id(idxCh);
 info.sorted = info.sorted(idxCh);
+info.channel = info.channel(idxCh);
+info.firing_rate = info.firing_rate(idxCh);
+info.n_spikes = info.n_spikes(idxCh);
+info.depth = info.depth(idxCh);
 
 N = length(tSp);                                                            % number of high quality units
 disp(['you have ' num2str(N) ' neurons in this dataset'])
