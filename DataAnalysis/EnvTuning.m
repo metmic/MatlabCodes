@@ -2,12 +2,12 @@ function [output_matrix,stimulus] = EnvTuningNPIXDUO(stimulus, binary, Envf, SR,
 % envelope tuning
 
 %----- INPUT VARIABLES ----------------------------------------------------
-% stimulus = scaled envelope stimulus
+% stimulus = envelope stimulus
 % binary = binary matrix neurons
 % Envf = vector containing the envelope frequencies in Hz
 % SR = sampling frequency binary
 % numCylc = number of full cycles per envelope frequency
-% scalingFactor = number to scale stimulusO up to mV/cm
+% scalingFactor = number to scale stimulus to be mV/cm
 % plotFig = set 1 if tuning should be plotted
 
 %----- OUTPUT VARIABLES ---------------------------------------------------
@@ -21,7 +21,7 @@ function [output_matrix,stimulus] = EnvTuningNPIXDUO(stimulus, binary, Envf, SR,
 %       col 11 - 13: vector strength (all spikes - bursts - isolated spikes)
 %       col 14: z-score VS 
 
-% Maso 2018
+% Maso 2020
 %==========================================================================
 
 %----- burst threshold ----------------------------------------------------
@@ -65,7 +65,7 @@ spiketimes = spiketimes1;             % takes all spiketimes since we have selec
 % % % % %     [VSI,~,gainI,gainrawI,phaseI]=GainPhaseMI(spiketimes_isolated,OXings_env,env_freq,scalingFactor(ii),ii);
 %----- Assign Values into output matrix -------------------------------
 K = 1;
-output(K,1)=15;
+output(K,1)=15; % upper bound of carrier frequency; change if needed
 output(K,2)=NaN;
 output(K,3)=length(spiketimes_bursts)/length(spiketimes);
 output(K,4)=Envf;
