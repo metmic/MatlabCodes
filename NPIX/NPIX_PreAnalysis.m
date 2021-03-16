@@ -343,22 +343,26 @@ while DataAnalysis<numel(fn)
         % ENVELOPES
         %----------------------------------------------------------------------
         sglxT = 1;                                                              % enter the extra time from SpikeGLX in sec
+        indEnvStim = input('enter position of envelope stimuli (i.e.: [2 3]): ');
         quest = input('sorted with KS (1 for YES)? ');
-        % Load spike sorted *.mat file
+        questEnv = input('how many times were all envelopes repeated? ');   % if two or more envelope freuquency runs are analyzed, enter the number here
         % load envelope stimuli
         disp('***** load envelope stimulus file *****')
-        load([dire, pLoc, 'envelope_stims.mat']);
+        dirStim = uigetdir();
+        load([dirStim, pLoc, 'envelope_stims.mat']);
         
         disp('***** get spike2 dir *****')
         dirS2 = uigetdir();
-        disp('***** pick envelope spike2 file *****')
+        disp('***** pick spike2 file(s) of concatenated analysis file *****')
         d = dir([dirS2, pLoc, '*.mat']);
         fnE = {d.name};
-        [indx,tf] = listdlg('PromptString','spike2 file envelopes files:','SelectionMode','multiple','ListString',fnE);
+        [indx,tf] = listdlg('PromptString','spike2 files:','SelectionMode','multiple','ListString',fnE);
         files = d(indx,tf);
         clear d fnE indx tf
-        dataS2 = load([dirS2, pLoc' files(1).name]);
-        Rec = input('which NPIX recording: ');
+        for I = 1:size(files,1)
+            dataS2{I} = load([dirS2, pLoc' files(I).name]);
+        end
+        Rec = input('position of 1st envelope NPIX recording: '); % enter position in concat file of first envelope run
         
         % envelope frequencies (in Hz)
         envF = [0.05 0.1 0.25 0.5 0.75 1];
@@ -366,14 +370,14 @@ while DataAnalysis<numel(fn)
         cyclVect = repmat(20,numel(envF),1)';
         envDurations = cyclVect.*(1./envF);
         
-        % get individual envelope stimuli in separate cells
+        % get single envelope stimuli in separate cells and for each env frequency run
         envB = [];
         for I = 1:numel(envF)
             if I == 1
                 temp = env(1:cyclVect(I)*1/envF(I)/dt);
             else
                 start = sum(envDurations(1:I-1))+(2*(I-1));
-                temp = env((start/dt)+1:(start/dt)+1 + (cyclVect(I)*1/envF(I)/dt)-1);
+                temp = env((start/dt)+1:(start/dt)+1 + ((cyclVect(I)*1/envF(I)/dt)-1));
             end
             envStim{I} = temp;
             envB = [envB; temp; zeros(2*2000,1)];
@@ -382,111 +386,145 @@ while DataAnalysis<numel(fn)
         clear start
         
         nStim = 1:numel(envF)+1;
-        tStim = dataS2.Ch9.times;                                                % get stim start times in spike2 using the stim triggers
+        tStim = [];
+        for I = indEnvStim
+            tStimT = dataS2{I}.Ch9.times;                                                % get stim start times in spike2 using the stim triggers
+            tStim = [tStim tStimT];
+            clear tStimT
+        end
         
         % check if all envelope onsets are correct and delete false ones if neccessary
-        figure;plot(dataS2.Ch3.times,dataS2.Ch3.values,'k','LineWidth',1.5);hold on;plot(tStim,zeros(length(tStim),1),'rd','MarkerFaceColor','r','MarkerSize',7)
-        title('check, if all stimulus onsets are correct, and if any stimulus should be discarted')
+        q = 1;
+        figure; tiledlayout(questEnv,1)
+        for I = indEnvStim
+            nexttile
+            plot(dataS2{I}.Ch3.times,dataS2{I}.Ch3.values);hold on;plot(tStim(:,q),zeros(size(tStim,1),1),'*')
+            q = q+1;
+        end
         delet = [];
         questB = input('Delete timepoints (YES = 1)? ');
+        close all
         if questB == 1
-            close
             delet = input('enter timepoint indices to delete; format [number number]: ');
             tStim(delet) = [];
-            figure;plot(dataS2.Ch3.times,dataS2.Ch3.values,'k','LineWidth',1.5);hold on;plot(tStim,zeros(length(tStim),1),'rd','MarkerFaceColor','r','MarkerSize',7)
+            q = 1;
+            figure; tiledlayout(questEnv,1)
+            for I = indEnvStim
+                nexttile
+                plot(dataS2{I}.Ch3.times,dataS2{I}.Ch3.values);hold on;plot(tStim(:,q),zeros(size(tStim,1),1),'*')
+                q = q+1;
+            end
             pause
             close
         end
         
         % add end-time
-        tStim = [tStim; dataS2.Ch3.times(end)];
-        tStimEnv = tStim-tStim(1);
-        
-        if quest == 1
-            % add time of prev NPIX recordings due to concatenation
-            pretime = sum(data.nSampsTotal(1:Rec-1))./str2double(data.meta.imSampRate);
-            tStimNeurons = tStimEnv+data.tEdges(Rec,1);
-        else
-            tStimNeurons = tStimEnv;
+        q = 1;
+        for I = indEnvStim
+            tStimT(:,q) = [tStim(:,q); dataS2{I}.Ch3.times(end)];
+            tStimEnv(:,q) = tStimT(:,q)-tStimT(1,q);
+            q = q+1;
         end
+        tStim = tStimT;clear tStimT
+         
+        % add time of prev NPIX recordings due to concatenation
+        RecOri = Rec;
+        for I = 1:questEnv
+            if quest == 1
+                if Rec == 1
+                    pretime = 0;
+                else
+                    pretime = data.nSampsTotal(Rec-1)./str2double(data.meta.imSampRate);
+                end
+                tStimNeurons(:,I) = tStimEnv(:,I)+data.tEdges(Rec,1);
+            else
+                tStimNeurons(:,I) = tStimEnv(:,I); % extra second for single t-files (for data that is NOT concatenated)
+            end
+            Rec = Rec+1;
+        end
+        Rec = RecOri;
         
         % correct for start point of next envelope if one envelope was faulty and delete the faulty envelope
         tStimNeuronsCorrected = tStimNeurons;
-        
-        % behavior
-        disp('^^^^^^ conpute behavioral gain, phase, offset and get scaling factor and contrast ^^^^^^')
-        [~, behavior.gain, behavior.phase, behavior.offset, scalingFactor, StimContrast] = TuningEnvelopeBN(dataS2, envF, envStim, delet);
-        
-        if questB == 1
-            envFD = envF(delet);
-            tStimEnvcorrected(delet+1:end) = tStimEnvcorrected(delet+1:end)-(10*(1/envFD));
-            stimend = abs(length(env)/2000-tStimEnvcorrected(7));
-            tStimEnvcorrected(7) = tStimEnvcorrected(7)-stimend;
+        q = 1;
+        for J = indEnvStim
+            % behavior
+            disp('^^^^^^ conpute behavioral gain, phase, offset and get scaling factor and contrast ^^^^^^')
+            [~, behavior.EODf, behavior.EODf_low, behavior.gain, behavior.phase, behavior.offset, scalingFactor{q}, StimContrast{q}] = ...
+                TuningEnvelopeBN(dataS2{J}, envF, envStim, delet);
             
-            tStimcorrected(delet) = [];
-            tStimEnvcorrected(delet) = [];
-            tStimNeuronsCorrected(delet) = [];
-            envF(delet) = [];
-            cycldur(delet) = [];
-            envStim{delet} = [];
-            dataS2.Ch9.times(delet) = [];
-        end
-        
-        % extract binaries for each envelope frequency and compute gain, phase, VS and zscore
-        disp('^^^^^^ conpute neuronal gain, phase, VS and zscore ^^^^^^')
-        for I = 1:numel(envF)
-            cycl = cyclVect(I);
-            disp([' working on envelope frequency ' num2str(envF(I)) 'Hz'])
-            tEdges_here = [(tStimNeuronsCorrected(nStim(I)))+sglxT , (tStimNeuronsCorrected(nStim(I))+(cycl*(1/envF(I))))+sglxT]; % the extra 1 is because SpikeGLX adds a second to the beginning/end of each file
-            bin_envelope = zeros(N,ceil(abs(diff(tEdges_here))/dt));
-            % loop over neurons
-            for n = 1:N
-                tSp_here = data.tSp{n}(data.tSp{n}>tEdges_here(1) & data.tSp{n}<tEdges_here(2))-tEdges_here(1);            % extract relevant spikes during stimulus period
-                idx = round(tSp_here/dt);
-                idx = idx(idx>0 & idx<=length(bin_envelope));
-                bin_envelope(n,idx) = 1;
-                clear tSp_here idx
-            end
-            if size(bin_envelope,2) > ceil((1/envF(I))*cycl/dt)
-                bin_envelope(:,ceil( (1/envF(I))*cycl/dt )+1:end) = [];
+% %             if questB == 1
+% %                 envFD = envF(delet);
+% %                 tStimEnvcorrected(delet+1:end) = tStimEnvcorrected(delet+1:end)-(10*(1/envFD));
+% %                 stimend = abs(length(env)/2000-tStimEnvcorrected(7));
+% %                 tStimEnvcorrected(7) = tStimEnvcorrected(7)-stimend;
+% %                 
+% %                 tStimcorrected(delet) = [];
+% %                 tStimEnvcorrected(delet) = [];
+% %                 tStimNeuronsCorrected(delet) = [];
+% %                 envF(delet) = [];
+% %                 cycldur(delet) = [];
+% %                 neurons{delet} = [];
+% %                 dataS2.Ch9.times(delet) = [];
+% %             end
+            
+            % extract binaries for each envelope frequency and compute gain, phase, VS and zscore
+            disp('^^^^^^ conpute neuronal gain, phase, VS and zscore ^^^^^^')
+            for I = 1:numel(envF)
+                cycl = cyclVect(I);
+                disp([' working on envelope frequency ' num2str(envF(I)) 'Hz'])
+                tEdges_here = [];
+                tEdges_here = [(tStimNeuronsCorrected(nStim(I),q))+sglxT , (tStimNeuronsCorrected(nStim(I),q)+(cycl*(1/envF(I))))+sglxT]; % the extra 1 is because SpikeGLX adds a second to the beginning/end of each file
+                bin_envelope = zeros(N,ceil(abs(diff(tEdges_here))/dt));
+                % loop over neurons
+                for n = 1:N
+                    tSp_here = data.tSp{n}(data.tSp{n}>tEdges_here(1) & data.tSp{n}<tEdges_here(2))-tEdges_here(1);            % extract relevant spikes during stimulus period
+                    idx = round(tSp_here/dt);
+                    idx = idx(idx>0 & idx<=length(bin_envelope));
+                    bin_envelope(n,idx) = 1;
+                    clear tSp_here idx
+                end
+                if size(bin_envelope,2) > ceil((1/envF(I))*cycl/dt)
+                    bin_envelope(:,ceil( (1/envF(I))*cycl/dt )+1:end) = [];
+                end
+                
+                disp('^^^^^^ tuning ^^^^^^')
+                for II = 1:N
+                    output = EnvTuning(envStim{I}, bin_envelope(II,:), envF(I), 1/dt, cycl, scalingFactor{1,q}(I), 0);
+                    neurons{I}.zscore(:,II) = output(2:end,14);
+                    neurons{I}.gain(:,II) = output(2:end,5);
+                    %----- if bursts and isolated spikes are needed -----------------------
+                    %         neurons{I}.gainB(:,II) = outputM(2:end,6);
+                    %         neurons{I}.gainI(I,II) = outputM(2:end,7);
+                    
+                    neurons{I}.phase(:,II) = output(2:end,8);
+                    %         neurons{I}.phaseB(:,II) = outputM(2:end,9);
+                    %         neurons{I}.phaseI(:,II) = outputM(2:end,10);
+                    
+                    neurons{I}.VS(:,II) = output(2:end,11);
+                    %         neurons{I}.VSB(:,II) = outputM(2:end,12);
+                    %         neurons{I}.VSI(:,II) = outputM(2:end,13);
+                    clear output
+                end
+                neurons{I}.binary = bin_envelope;
+                clear tEdges_heret0Xings mpd Tenvelope bin_envelope
             end
             
-            disp('^^^^^^ tuning ^^^^^^')
-            for II = 1:N
-                output = EnvTuningNPIXDUO(envStim{I}, bin_envelope(II,:), envF(I), 1/dt, cycl, scalingFactor(I), 0);
-                Envstim{I}.zscore(:,II) = output(2:end,14);
-                Envstim{I}.gain(:,II) = output(2:end,5);
-                %----- if bursts and isolated spikes are needed -----------------------
-                %         Envstim{I}.gainB(:,II) = outputM(2:end,6);
-                %         Envstim{I}.gainI(I,II) = outputM(2:end,7);
-                
-                Envstim{I}.phase(:,II) = output(2:end,8);
-                %         Envstim{I}.phaseB(:,II) = outputM(2:end,9);
-                %         Envstim{I}.phaseI(:,II) = outputM(2:end,10);
-                
-                Envstim{I}.VS(:,II) = output(2:end,11);
-                %         Envstim{I}.VSB(:,II) = outputM(2:end,12);
-                %         Envstim{I}.VSI(:,II) = outputM(2:end,13);
-                clear output
-            end
-            Envstim{I}.binary = bin_envelope;
-            clear tEdges_heret0Xings mpd Tenvelope
+            % get positions of channels
+            [~, EnvRun{q}.Pos] = readShankMap (data.meta);
+            % get neuron IDs and info
+            EnvRun{q}.Ch = data.Ch;
+            EnvRun{q}.info = data.info;
+            
+            EnvRun{q}.neurons = neurons;
+            EnvRun{q}.behavior = behavior;
+            clear neurons behavior
+            q = q+1;
         end
-        
-        for I = 1:numel(envF)
-            Envstim{I}.bahviorGain = behavior.gain(I);
-            Envstim{I}.bahviorPhase = behavior.phase(I);
-            Envstim{I}.bahviorOffset = behavior.offset(I);
-        end
-        % get positions of channels
-        [~, Pos] = readShankMap (data.meta);
-        % get neuron IDs and info
-        Ch = data.Ch;
-        info = data.info;
         
         disp('***** saving envelope dataset *****')
         name = input('enter save name: ','s');
-        save([sdir pLoc name '_envelopes.mat'],'Envstim','envF','scalingFactor','dirD','dt','Pos','info','Ch')
+        save([sdir pLoc name '_envelopes.mat'],'EnvRun','envF','envStim','scalingFactor','StimContrast','dirD','dt')
         clearvars -except pLoc DataAnalysis fn data sdir dire dirD dt N Type
         DataAnalysis = listdlg('PromptString','results to plot:','SelectionMode','multiple','ListString',fn,'ListSize',[150,200]);
         %%
