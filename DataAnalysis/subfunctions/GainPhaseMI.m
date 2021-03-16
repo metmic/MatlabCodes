@@ -43,28 +43,39 @@ edges_new=edges(ind_PH);
 values_new=values(ind_PH);
 indZero = (values_new>0);
 
-if sum(indZero) >= 2
-    [BETA1,R1,J1,COVB1,MSE1]=nlinfit(edges_new,values_new',@sinewave,[min(values_new) max(values_new) max(edges(values_new==max(values_new)))]);
+if sum(indZero) >= 2 
+    % output is: mean - max - min - phase of fitted function
+     [BETA1,~,~,~,~]=nlinfit(edges_new,values_new',@sinewave,[mean(values_new) max(values_new) min(values_new) max(edges(values_new==max(values_new)))]);    
     if plotFig == 1
-        figure(777);clf;bar(edges,values);hold on; plot(edges,sinewave(BETA1,edges),'r');hold off;pause;close 777
+        figure(777);clf;bar(edges,values);hold on; plot(edges,sinewave(BETA1,edges),'r');hold off;
+        pause;close 777
     end
     %     dbstop if error
-    % get phase from sine fit
-    yFit=sinewave(BETA1,edges);
-    indmaxFit=find(yFit==max(yFit));
-    BETA1(3)=edges(indmaxFit);
-    %         close all
     
-    while BETA1(3)<0
-        BETA1(3)=BETA1(3)+2*pi;
+    
+%     % get gain and phase from sine fit
+%     yFit = sinewave(BETA1,edges);
+%     yFit(yFit<0) = 0;
+%     gain = abs(max(yFit)-min(yFit))/scaling_factor;
+%     gainraw = abs(max(yFit)-min(yFit));
+%     indmaxFit=find(yFit==max(yFit));
+%     BETA1(4)=edges(indmaxFit);
+    
+    while BETA1(4)<0
+        BETA1(4)=BETA1(4)+2*pi;
     end
-    while BETA1(3)>2*pi
-        BETA1(3)=BETA1(3)-2*pi;
+    while BETA1(4)>deg2rad(320)
+        BETA1(4)=BETA1(4)-deg2rad(320);
     end
     
-    gain=abs((BETA1(2))-(BETA1(1)))*scaling_factor;
-    gainraw=abs((BETA1(2))-(BETA1(1)));
-    phase=rad2deg(BETA1(3));
+    if BETA1(3) <0
+        BETA1(3) = 0;
+    end
+    
+    % using beta values
+    gain=abs(BETA1(2)-BETA1(3))/scaling_factor;
+    gainraw=abs((BETA1(2))-(BETA1(3)));
+    phase =rad2deg(BETA1(4));
 else
     gain = NaN;
     gainraw = NaN;

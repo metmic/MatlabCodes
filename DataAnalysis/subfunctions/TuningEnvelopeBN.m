@@ -1,4 +1,4 @@
-function [envStim, gain, phase, offset, scalingFactor, StimContrast] = TuningEnvelopeBN(input1, input2, input3, input4)
+function [envStim, EODf, EODf_low, gain, phase, offset, scalingFactor, StimContrast] = TuningEnvelopeBN(input1, input2, input3, input4)
 %----------------
 % inputs:
 % input1:
@@ -52,6 +52,7 @@ disp(' ')
 % compute for each single envelope frequency
 for I = 1:numel(envF)
     close all
+    clear EODfT EODf_lowT StimEnv temp*
     % current envelope frequency and cycle duration
     CurrEnvFreq = envF(I);
     cycl = cyclVect(I);
@@ -66,7 +67,7 @@ for I = 1:numel(envF)
     disp('^^^^^^^^^^^^^ get mean EODf before stimulus ^^^^^^^^^^^^^^^^')
     tempEODbefore = input1.Ch8.values(round((envON(I)-1.5)*SR):round(envON(I)*SR)-1);
     meanEODf = EODftimedependent(tempEODbefore, SR, SRglbl);
-    [~, meanEODf] = chirpremove(meanEODf, CurrEnvFreq, SR, 0);
+    [~, meanEODf] = chirpremove(meanEODf, 10, SR, 0);
     meanEODf = nanmean(meanEODf(500:2500));
     clear tempEODbefore
     
@@ -93,9 +94,20 @@ for I = 1:numel(envF)
     % chrip removal
     disp('^^^^^^^^^^^^^ remove chirps ^^^^^^^^^^^^^^^^')
     tempEODnochirps = chirpremove(tempfEOD, CurrEnvFreq, SRglbl, 1);
+    tempEODnochirps = tempEODnochirps+(meanEODf-mean(tempEODnochirps));
     
+    % filter fEOD
+    [B,A] = butter(2, 2/1000);
+    EODfT = filtfilt(B,A,[tempEODnochirps; tempEODnochirps; tempEODnochirps]);
+    EODf{I} = EODfT(numel(tempEODnochirps)+1:end-numel(tempEODnochirps));
+
+    [B1,A1] = butter(1,0.01/1000);
+    EODf_lowT = filtfilt(B1,A1,[EODf{I}; EODf{I}; EODf{I}]);
+    EODf_low{I} = EODf_lowT(numel(EODf{I})+1:end-numel(EODf{I}));
+   
     %----------------------------------------------------------------------
-    scalingFactor(I)=(Dipamp(I)); % multiply gain by this
+    scalingFactor(I) = (Dipamp(I)); % divide gain by this
     disp('^^^^^^^^^^^^^ compute gain / phase / gain ^^^^^^^^^^^^^^^^')
-    [gain(I), phase(I), offset(I)] = gainphaseoffset(tempDipole, tempEODnochirps, meanEODf, scalingFactor(I), CurrEnvFreq, SRglbl);
+    [gain(I), phase(I), offset(I)] = gainphaseoffset(input3{I},  EODf{I}, meanEODf, scalingFactor(I), CurrEnvFreq, SRglbl);
 end
+

@@ -2,15 +2,17 @@ function [EODf, EOD_chirp_filt] = chirpremove(fEOD, Freq, SR, flag)
 % code to remove chirps from EOD trace and detrend
 
 % filter EODtrace
-[BB,AA] = butter(2,0.01);
-EOD_chirp_filt = filtfilt(BB,AA,[fEOD fEOD fEOD]);
+[BB,AA] = butter(2,(100*Freq)/(SR*.5));
+EOD_chirp_filt = filtfilt(BB,AA,[fEOD; fEOD; fEOD]);
 EOD_chirp_filt = EOD_chirp_filt(numel(fEOD)+1:2*numel(fEOD));
 
 % % % set threshhold
-% % figure(001);plot(EOD_chirp_filt(200:end-200));title('threshold chirps; if no chirps then select below EOD trace ouside window')
-% % [~,thresh] = ginput(1);close 001
+figure(001);plot(EOD_chirp_filt(200:end-200));title('threshold chirps; if no chirps then select below EOD trace ouside window')
+axis tight
+ylim([min(EOD_chirp_filt(200:end-200))-10 max(EOD_chirp_filt(200:end-200))+10])
+[~,thresh] = ginput(1);close 001
 % use fixed threshhold
-thresh = 0.1;
+% thresh = 0.1;
 
 EOD_chirp_filtO = EOD_chirp_filt;
 % replace chirps with extrapolated data between each start and stop point
@@ -58,7 +60,7 @@ EODf = [];
 if flag == 1
     % filter fEOD to remove non-stationarity
     [B1,A1] = butter(1,0.01/1000);
-    EODfnochirpsDetrended = filtfilt(B1,A1,[EOD_chirp_filt EOD_chirp_filt EOD_chirp_filt]);
+    EODfnochirpsDetrended = filtfilt(B1,A1,[EOD_chirp_filt; EOD_chirp_filt; EOD_chirp_filt]);
     EODfnochirpsDetrended = EODfnochirpsDetrended(numel(EOD_chirp_filt)+1:2*numel(EOD_chirp_filt));
     EODf = EOD_chirp_filt-EODfnochirpsDetrended+(nanmean(EOD_chirp_filt(2000:2000+(1/Freq*12*SR))));
 end

@@ -4,7 +4,9 @@ function [gain, phase, offset] = gainphaseoffset(stimulus, response, meanRespons
 
     figure(201);plot(response)
     title('select most stationary part of response')
-    ylim([meanResponse-10 meanResponse+10])
+    axis tight
+    ylim([min(response(200:end-200))-10 max(response(200:end-200))+10])
+    pause
     % choose whether to take entire trace or subsection;
     % this is needed if the response is "inconsistent" or if tracking is only
     % good for one portion
@@ -71,8 +73,9 @@ function [gain, phase, offset] = gainphaseoffset(stimulus, response, meanRespons
     if numel(peaks)>1
         for J = 1:numel(peaks)-MM
             temp = TempResponse(peaks(J):peaks(J)+maxdiff-1);
-            temp = temp';
+            temp = temp(:);
             psth = psth+temp;
+            clear temp
         end
         psth = psth./((numel(peaks)-MM));
     end
@@ -122,8 +125,10 @@ function [gain, phase, offset] = gainphaseoffset(stimulus, response, meanRespons
     hold on;plot(edges,funENVELOPE(beta,edges),'r');
     pause(1)
     close 999
+%     yFit = funENVELOPE(beta,edges);
     % now calculate gain, phase and offset of the response to envelope stimuli
-    gain = abs((beta(2))-(beta(1)))*scalingFactor;
+    gain = abs((beta(2))*2)/scalingFactor;
+%     gain = abs(max(yFit)-min(yFit))/scalingFactor;
     offset = abs(nanmean(TempResponse)-meanResponse);
     time_estim = (1:1:numel(psth))*SR';
     if time_estim(end)>=1/Freq-(1/Freq/10)

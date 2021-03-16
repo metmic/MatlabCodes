@@ -50,6 +50,8 @@ end
 Contr = (stdEODstim/aEODbl)*100;
 %% calculate dipole amplitude for all stimulus episodes
 figure;plot(Dipole_filt);
+axis tight
+ylim([0 max(Dipole_filt(200:end-200))+0.1]);
 title('select peak and trough of envelope modulation')
 [~, Y] = ginput(2);
 close all
@@ -58,8 +60,8 @@ mult = abs(diff(Y)) / abs(diff([max(Stim) min(Stim)]));
 offset = (sum(Y)/2);
 
 figure;
-yyaxis left; plot(1/10000:1/10000:numel(Dipole)/10000,Dipole_filt);ylim([0 5]);
-yyaxis right; plot(1/2000:1/2000:numel(Stim)/2000,(Stim*mult)+offset,'LineWidth',1.5);ylim([0 5])
+yyaxis left; plot(1/10000:1/10000:numel(Dipole)/10000,Dipole_filt);ylim([0 max(Dipole_filt(200:end-200))+0.1]);
+yyaxis right; plot(1/2000:1/2000:numel(Stim)/2000,(Stim*mult)+offset,'LineWidth',1.5);ylim([0 max(Dipole_filt(200:end-200))+0.1]);
 title('amplitude agrees most of the time?')
 quest = input('match [1: yes; 0: no]?: ');
 while quest == 0
@@ -68,8 +70,8 @@ while quest == 0
     mult = input('enter number to multiply: ');
     offset = input('enter offset: ');
     figure;
-    yyaxis left;plot(Dipole_filt);ylim([0 5]);
-    yyaxis right;plot((Stim*mult)+offset,'LineWidth',1.5);ylim([0 5]);
+    yyaxis left;plot(1/10000:1/10000:numel(Dipole)/10000,Dipole_filt);ylim([0 5]);
+    yyaxis right;plot(1/2000:1/2000:numel(Stim)/2000,(Stim*mult)+offset,'LineWidth',1.5);ylim([0 5]);
     quest = input('match [1: yes; 0: no]?: ');
 end
 envStim = Stim*mult+offset;
