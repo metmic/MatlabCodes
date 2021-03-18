@@ -3,19 +3,19 @@ function [gain, phase, offset] = gainphaseoffset(stimulus, response, meanRespons
 % gain/phase/offset measure
 
     figure(201);plot(response)
-    title('select most stationary part of response')
+    title('select most stationary part of response, but at least 4 cycles')
     axis tight
     ylim([min(response(200:end-200))-10 max(response(200:end-200))+10])
     pause
     % choose whether to take entire trace or subsection;
     % this is needed if the response is "inconsistent" or if tracking is only
     % good for one portion
-    choice = menu('Take entire trace?','YES','NO');
-    switch choice
-        case 1
-            TempStimulus = stimulus;
-            TempResponse = response;
-        case 2
+    % choice = menu('Take entire trace?','YES','NO');
+    % switch choice
+        % case 1
+            % TempStimulus = stimulus;
+            % TempResponse = response;
+        % case 2
             % define the part you want to analyze using a crosshair
             XPart = ginput(2);
             XPart = round(XPart);
@@ -27,7 +27,7 @@ function [gain, phase, offset] = gainphaseoffset(stimulus, response, meanRespons
             end
             TempStimulus = stimulus(XPart(1):XPart(2));
             TempResponse = response(XPart(1):XPart(2));
-    end
+    % end
     close 201
     
     % get 0Xings of the envelope stimulus
