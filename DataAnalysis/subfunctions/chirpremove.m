@@ -59,7 +59,9 @@ end
 EODf = [];
 if flag == 1
     % filter fEOD to remove non-stationarity
-    [B1,A1] = butter(1,0.01/1000);
+    % 0.00001 for 0.1
+    cutoff = Freq/10000;
+    [B1,A1] = butter(1,cutoff);
     EODfnochirpsDetrended = filtfilt(B1,A1,[EOD_chirp_filt; EOD_chirp_filt; EOD_chirp_filt]);
     EODfnochirpsDetrended = EODfnochirpsDetrended(numel(EOD_chirp_filt)+1:2*numel(EOD_chirp_filt));
     EODf = EOD_chirp_filt-EODfnochirpsDetrended+(nanmean(EOD_chirp_filt(2000:2000+(1/Freq*12*SR))));
