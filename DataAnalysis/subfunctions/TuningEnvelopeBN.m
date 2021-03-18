@@ -1,9 +1,9 @@
 function [envStim, EODf, EODf_low, gain, phase, offset, scalingFactor, StimContrast] = TuningEnvelopeBN(input1, input2, input3, input4)
 %----------------
 % inputs:
-% input1:
-% input2:
-% input3:
+% input1: spike2 data containing EOD trace, EOD0Xings, dipole, etc
+% input2: envelope freuqencies
+% input3: envelope stimuli
 % input4: if stimuli where deleted
 %---------------
 
@@ -97,11 +97,13 @@ for I = 1:numel(envF)
     tempEODnochirps = tempEODnochirps+(meanEODf-mean(tempEODnochirps));
     
     % filter fEOD
-    [B,A] = butter(2, 2/1000);
+    cutoffA = CurrEnvFreq/50;
+    cutoffB = CurrEnvFreq/10000;
+    [B,A] = butter(2, cutoffA);
     EODfT = filtfilt(B,A,[tempEODnochirps; tempEODnochirps; tempEODnochirps]);
     EODf{I} = EODfT(numel(tempEODnochirps)+1:end-numel(tempEODnochirps));
 
-    [B1,A1] = butter(1,0.01/1000);
+    [B1,A1] = butter(1,cutoffB);
     EODf_lowT = filtfilt(B1,A1,[EODf{I}; EODf{I}; EODf{I}]);
     EODf_low{I} = EODf_lowT(numel(EODf{I})+1:end-numel(EODf{I}));
    
