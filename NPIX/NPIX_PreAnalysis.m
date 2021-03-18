@@ -51,6 +51,8 @@ data = load([dirD pLoc uigetfile([dirD pLoc '*_extracted.mat'])]);
 dt = 1/2000;
 % number of extracted neurons in current datafile
 N = data.N;
+% check version of MATLAB (important for some functions)
+v= ver('MATLAB'); 
 %----- selector for analysis ----------------------------------------------
 % here we set a dialogue that allows to "jump" to a specific stimulus section
 fn = {'01: baseline'...
@@ -395,9 +397,16 @@ while DataAnalysis<numel(fn)
         
         % check if all envelope onsets are correct and delete false ones if neccessary
         q = 1;
-        figure; tiledlayout(questEnv,1)
+        figure; 
+        if v.Release=="(R2019b)"
+            tiledlayout(questEnv,1)
+        end
         for I = indEnvStim
-            nexttile
+            if v.Release=="(R2019b)"
+                nexttile
+            else
+                subplot(questEnv,1,I)
+            end
             plot(dataS2{I}.Ch3.times,dataS2{I}.Ch3.values);hold on;plot(tStim(:,q),zeros(size(tStim,1),1),'*')
             q = q+1;
         end
@@ -408,9 +417,16 @@ while DataAnalysis<numel(fn)
             delet = input('enter timepoint indices to delete; format [number number]: ');
             tStim(delet) = [];
             q = 1;
-            figure; tiledlayout(questEnv,1)
+            figure; 
+            if v.Release=="(R2019b)"
+                tiledlayout(questEnv,1)
+            end
             for I = indEnvStim
-                nexttile
+                if v.Release=="(R2019b)"
+                    nexttile
+                else
+                    subplot(questEnv,1,I)
+                end
                 plot(dataS2{I}.Ch3.times,dataS2{I}.Ch3.values);hold on;plot(tStim(:,q),zeros(size(tStim,1),1),'*')
                 q = q+1;
             end
