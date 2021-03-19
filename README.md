@@ -13,6 +13,6 @@ update 03/16/2021 changes:
  - NPIX_PreAnalysis: envelope part now can handle multiple stimulations of the envelope block (i.e., if                        all frequencies have been repeated multiple times)
 
 Instructions:
-Donwload the directory and add to Matlab path (including the subfunctions).
+Donwload the directory and add to Matlab path (including the subfunctions). Be advised that you might have to adapt the codes to your specific needs!
 
 More codes will be added... 
