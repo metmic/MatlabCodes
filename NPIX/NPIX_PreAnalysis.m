@@ -203,7 +203,7 @@ while DataAnalysis<numel(fn)
         disp('saving the noise dataset')
         save([sdir pLoc name '_noise.mat'],'bin_noise','tSTA','combSp','noiseDur','dipole','oppType','pairType','sameType','Type','vSTA','vStim','dt','Pos','dirD','info','Ch')
         
-        clearvars -except pLoc DataAnalysis fn data sdir dire dirD dt N Type
+        clearvars -except pLoc DataAnalysis fn data sdir dire dirD dt N
         DataAnalysis = listdlg('PromptString','results to plot:','SelectionMode','multiple','ListString',fn,'ListSize',[150,200]);
         %%
     elseif DataAnalysis == 3
@@ -334,9 +334,9 @@ while DataAnalysis<numel(fn)
         info = data.info;
         name = input('set savename for AMs: ','s');
         disp('saving AM dataset')
-        save([sdir pLoc name '_AMs.mat'],'AMstim','Type','AMf','Pos','dirD','dt','info','Ch')
+        save([sdir pLoc name '_AMs.mat'],'AMstim','AMf','Pos','dirD','dt','info','Ch')
         
-        clearvars -except pLoc DataAnalysis fn data sdir dire dirD dt N Type
+        clearvars -except pLoc DataAnalysis fn data sdir dire dirD dt N
         DataAnalysis = listdlg('PromptString','results to plot:','SelectionMode','multiple','ListString',fn,'ListSize',[300,200]);
         %%
     elseif DataAnalysis == 4
@@ -541,7 +541,7 @@ while DataAnalysis<numel(fn)
         disp('***** saving envelope dataset *****')
         name = input('enter save name: ','s');
         save([sdir pLoc name '_envelopes.mat'],'EnvRun','envF','envStim','scalingFactor','StimContrast','dirD','dt')
-        clearvars -except pLoc DataAnalysis fn data sdir dire dirD dt N Type
+        clearvars -except pLoc DataAnalysis fn data sdir dire dirD dt N
         DataAnalysis = listdlg('PromptString','results to plot:','SelectionMode','multiple','ListString',fn,'ListSize',[150,200]);
         %%
     end
