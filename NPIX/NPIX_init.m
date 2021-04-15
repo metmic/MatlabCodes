@@ -92,6 +92,6 @@ NPIX_RawData
 % once the spiketimes of each cluster / neuron have been extracted, you can
 % proceed with the analysis
 
-NPIX_Analysis
+NPIX_PreAnalysis
 % this code creates structures that contain the spiketimes, behavioral responses
 % as well as the corresponding stimuli
