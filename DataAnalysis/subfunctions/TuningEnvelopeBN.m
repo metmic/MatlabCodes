@@ -110,6 +110,6 @@ for I = 1:numel(envF)
     %----------------------------------------------------------------------
     scalingFactor(I) = (Dipamp(I)); % divide gain by this
     disp('^^^^^^^^^^^^^ compute gain / phase / gain ^^^^^^^^^^^^^^^^')
-    [gain(I), phase(I), offset(I)] = gainphaseoffset(input3{I},  EODf{I}, meanEODf, scalingFactor(I), CurrEnvFreq, SRglbl);
+    [gain(I), phase(I), offset(I)] = gainphaseoffset(input3{I},  EODf{I}, meanEODf, 1, CurrEnvFreq, SRglbl);
 end
 
