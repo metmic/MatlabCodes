@@ -3,8 +3,17 @@
 Here are some codes to extract and analyze data recorded with NPIX and SpikeGLX and to analyze behavioral responses captured with Spike2.
 ---------------------------------------------------------
 
-**last updates: 03/18/2021**
-- changed filter cutoff setting in some codes that handle the EODf filtering in the envelope codes. Filter cutoffs are now related to the respective envelope frequency.
+**latest updates: 07/20/2021**
+Some codes have been updated (see them for details). Please download them before next analysis:
+ - sinewave.m
+ - GainPhaseMI.m
+ - NPIX_PreAnalysis.m
+ - TuningEnvelopeBN.m
+ - distFunc.m
+
+
+update 03/16/2021 changes:
+ - changed filter cutoff setting in some codes that handle the EODf filtering in the envelope codes. Filter cutoffs are now related to the respective envelope frequency.
 
 
 update 03/16/2021 changes: 
