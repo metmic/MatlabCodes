@@ -7,7 +7,7 @@ dist = NaN(size(comb,1),1);                                                 % pr
 for c=1:length(comb)
     combCh(c,1:2) = [channel(comb(c,1)), channel(comb(c,2))]; % get channel# of each neuron in each pair
 end
-
+combCh(combCh == 0) = 1;
 for c = 1:length(combCh)
     x1=Pos(combCh(c,1),1);                                                  % xpos of Ch1 in pair i
     y1=Pos(combCh(c,1),2);                                                  % ypos of Ch1 in pair i
