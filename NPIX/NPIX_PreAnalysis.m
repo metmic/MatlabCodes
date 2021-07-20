@@ -346,6 +346,7 @@ while DataAnalysis<numel(fn)
         %----------------------------------------------------------------------
         sglxT = 1;                                                              % enter the extra time from SpikeGLX in sec
         indEnvStim = input('enter position of envelope stimuli (i.e.: [2 3]): ');
+        envStimA = 1:1:6;                                                    % indicate envelope stimuli to be analyzed
         quest = input('sorted with KS (1 for YES)? ');
         questEnv = input('how many times were all envelopes repeated? ');   % if two or more envelope freuquency runs are analyzed, enter the number here
         % load envelope stimuli
@@ -466,8 +467,9 @@ while DataAnalysis<numel(fn)
         for J = indEnvStim
             % behavior
             disp('^^^^^^ conpute behavioral gain, phase, offset and get scaling factor and contrast ^^^^^^')
-            [~, behavior.EODf, behavior.EODf_low, behavior.gain, behavior.phase, behavior.offset, scalingFactor{q}, StimContrast{q}] = ...
+            [~, carrier, behavior.EODf, behavior.EODfunfilt, behavior.EODf_low, behavior.gain, behavior.phase, behavior.offset, scalingFactor{q}, StimContrast{q}] = ...
                 TuningEnvelopeBN(dataS2{J}, envF, envStim, delet);
+            behavior.gain = behavior.gain./scalingFactor{1,q}(I); % or use: mean(scalingFactor{1,q}) for the mean scalingFactor
             
 % %             if questB == 1
 % %                 envFD = envF(delet);
@@ -506,7 +508,7 @@ while DataAnalysis<numel(fn)
                 
                 disp('^^^^^^ tuning ^^^^^^')
                 for II = 1:N
-                    output = EnvTuning(envStim{I}, bin_envelope(II,:), envF(I), 1/dt, cycl, scalingFactor{1,q}(I), 0);
+                    output = EnvTuning(envStim{I}, bin_envelope(II,:), envF(I), 1/dt, cycl, scalingFactor{1,q}(I), 0); % if the mean scalingFactor across all env freqs is desired, use: mean(scalingFactor{1,q})
                     neurons{I}.zscore(:,II) = output(2:end,14);
                     neurons{I}.gain(:,II) = output(2:end,5);
                     %----- if bursts and isolated spikes are needed -----------------------
