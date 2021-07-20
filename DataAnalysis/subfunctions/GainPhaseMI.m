@@ -45,7 +45,7 @@ indZero = (values_new>0);
 
 if sum(indZero) >= 2 
     % output is: mean - max - min - phase of fitted function
-     [BETA1,~,~,~,~]=nlinfit(edges_new,values_new',@sinewave,[mean(values_new) max(values_new) min(values_new) max(edges(values_new==max(values_new)))]);    
+     [BETA1,~,~,~,~]=nlinfit(edges_new,values_new',@sinewave,[max(values_new) min(values_new) env_freq max(edges(values_new==max(values_new)))]);    
     if plotFig == 1
         figure(777);clf;bar(edges,values);hold on; plot(edges,sinewave(BETA1,edges),'r');hold off;
         pause;close 777
@@ -61,21 +61,18 @@ if sum(indZero) >= 2
 %     indmaxFit=find(yFit==max(yFit));
 %     BETA1(4)=edges(indmaxFit);
     
+    BETA1(4) = mod(BETA1(4),2*pi);
     while BETA1(4)<0
-        BETA1(4)=BETA1(4)+2*pi;
+        BETA1(4) = BETA1(4)+2*pi;
     end
-    while BETA1(4)>deg2rad(320)
-        BETA1(4)=BETA1(4)-deg2rad(320);
-    end
-    
-    if BETA1(3) <0
-        BETA1(3) = 0;
+    while BETA1(4) > 2*pi
+       BETA1(4) = BETA1(4)-2*pi;
     end
     
-    % using beta values
-    gain=abs(BETA1(2)-BETA1(3))/scaling_factor;
-    gainraw=abs((BETA1(2))-(BETA1(3)));
-    phase =rad2deg(BETA1(4));
+    gain = abs(BETA1(2)-BETA1(1))*2/scaling_factor;
+    gainraw = abs(BETA1(2)-BETA1(1))*2;
+
+    phase = rad2deg(BETA1(4));
 else
     gain = NaN;
     gainraw = NaN;
