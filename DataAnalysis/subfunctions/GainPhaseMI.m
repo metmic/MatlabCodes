@@ -18,7 +18,6 @@ for GH=1:length(spiketimes)
 end
 
 edges=linspace(0,2*pi,21);
-phases=phases+(pi/2);
 for I=1:length(phases)
     if phases(I)>(2*pi)
         phases(I)=phases(I)-(2*pi);
